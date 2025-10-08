@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { Navbar } from "@/components/navbar";
+import { FloatingNavbar } from "@/components/floating-navbar";
 import { auth } from "@/server/auth";
 
 export default async function Home() {
@@ -13,7 +13,7 @@ export default async function Home() {
 
 	return (
 		<>
-			<Navbar user={session?.user} />
+			<FloatingNavbar user={session?.user} />
 			<main className="flex min-h-screen flex-col items-center justify-center">
 				<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
 					<h1 className="font-extrabold text-5xl tracking-tight sm:text-[5rem]">

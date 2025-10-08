@@ -1,14 +1,6 @@
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { signInAction } from "../actions";
 
@@ -21,51 +13,52 @@ export default async function SignInPage({
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-2xl">Sign In</CardTitle>
-					<CardDescription>
-						Enter your email and password to sign in to your account
-					</CardDescription>
-				</CardHeader>
-				<form action={signInAction}>
-					<CardContent className="space-y-4">
-						{params.error && (
-							<div className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">
-								{params.error}
-							</div>
-						)}
-						<div className="space-y-2">
-							<Label htmlFor="email">Email</Label>
-							<Input
-								id="email"
-								name="email"
-								type="email"
-								placeholder="you@example.com"
-								required
-							/>
+			<div className="mx-auto w-full max-w-sm space-y-8">
+				<div className="space-y-3 text-center">
+					<h1 className="font-semibold text-3xl">Welcome back</h1>
+					<p className="text-muted-foreground text-sm">
+						Enter your credentials to continue
+					</p>
+				</div>
+
+				<form action={signInAction} className="space-y-5">
+					{params.error && (
+						<div className="rounded-full bg-destructive/10 px-4 py-2 text-center text-destructive text-sm">
+							{params.error}
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="password">Password</Label>
-							<Input id="password" name="password" type="password" required />
-						</div>
-					</CardContent>
-					<CardFooter className="flex flex-col gap-4">
-						<Button type="submit" className="w-full">
-							Sign In
-						</Button>
-						<p className="text-center text-muted-foreground text-sm">
-							Don't have an account?{" "}
-							<Link
-								href="/auth/signup"
-								className="text-primary hover:underline"
-							>
-								Sign up
-							</Link>
-						</p>
-					</CardFooter>
+					)}
+
+					<Input
+						id="email"
+						name="email"
+						type="email"
+						placeholder="Email"
+						className="rounded-full"
+						required
+					/>
+
+					<Input
+						id="password"
+						name="password"
+						type="password"
+						placeholder="Password"
+						className="rounded-full"
+						required
+					/>
+
+					<Button type="submit" className="w-full rounded-full" size="lg">
+						Continue
+						<ArrowRight className="ml-2 h-4 w-4" />
+					</Button>
+
+					<p className="text-center text-muted-foreground text-sm">
+						Need an account?{" "}
+						<Link href="/auth/signup" className="text-primary hover:underline">
+							Sign up
+						</Link>
+					</p>
 				</form>
-			</Card>
+			</div>
 		</div>
 	);
 }

@@ -12,9 +12,10 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
+import { DoorOpen, LogOutIcon, SettingsIcon, Sparkles, UserIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type * as React from "react";
 
 interface FloatingNavbarProps extends React.HTMLAttributes<HTMLElement> {
@@ -26,6 +27,9 @@ interface FloatingNavbarProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function FloatingNavbar({ className, user, ...props }: FloatingNavbarProps) {
+	const pathname = usePathname();
+	const isSignInPage = pathname === "/auth/signin";
+
 	return (
 		<nav
 			className={cn(
@@ -36,20 +40,10 @@ export function FloatingNavbar({ className, user, ...props }: FloatingNavbarProp
 			)}
 			{...props}
 		>
-			{/* Logo */}
-			<Link
-				href="/home"
-				className="font-semibold text-primary text-sm transition-colors hover:text-primary/90"
-			>
-				Cosmic Tree
-			</Link>
-
-			<div className="h-4 w-px bg-border" />
-
 			{/* Controls */}
 			<div className="flex items-center gap-2">
 				<ThemeToggle />
-				{user && (
+				{user ? (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button
@@ -108,6 +102,28 @@ export function FloatingNavbar({ className, user, ...props }: FloatingNavbarProp
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
+				) : isSignInPage ? (
+					<Button
+						asChild
+						variant="ghost"
+						className="h-8 w-8 rounded-full p-0 hover:bg-accent hover:text-accent-foreground"
+					>
+						<Link href="/auth/signup">
+							<Sparkles className="h-4 w-4" />
+							<span className="sr-only">Sign Up</span>
+						</Link>
+					</Button>
+				) : (
+					<Button
+						asChild
+						variant="ghost"
+						className="h-8 w-8 rounded-full p-0 hover:bg-accent hover:text-accent-foreground"
+					>
+						<Link href="/auth/signin">
+							<DoorOpen className="h-4 w-4" />
+							<span className="sr-only">Sign In</span>
+						</Link>
+					</Button>
 				)}
 			</div>
 		</nav>

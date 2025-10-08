@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/navbar";
+import { FloatingNavbar } from "@/components/floating-navbar";
 import { auth } from "@/server/auth";
 
 export default async function AuthLayout({
@@ -10,7 +10,7 @@ export default async function AuthLayout({
 
 	return (
 		<>
-			<Navbar user={session?.user} />
+			<FloatingNavbar user={session?.user} />
 			{children}
 		</>
 	);

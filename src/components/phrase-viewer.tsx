@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ParallaxIcons } from "./parallax-icons";
 
 interface PhraseViewerProps {
 	phrases: string[];
@@ -9,6 +10,7 @@ interface PhraseViewerProps {
 export function PhraseViewer({ phrases }: PhraseViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
+	const [scrollY, setScrollY] = useState(0);
 
 	const scrollToPhrase = useCallback((index: number) => {
 		if (!containerRef.current) return;
@@ -68,6 +70,19 @@ export function PhraseViewer({ phrases }: PhraseViewerProps) {
 		return () => observer.disconnect();
 	}, [phrases]);
 
+	// Track scroll position for parallax effect
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
+
+		const handleScroll = () => {
+			setScrollY(container.scrollTop);
+		};
+
+		container.addEventListener("scroll", handleScroll);
+		return () => container.removeEventListener("scroll", handleScroll);
+	}, []);
+
 	return (
 		<>
 			{/* Progress indicator */}
@@ -85,12 +100,14 @@ export function PhraseViewer({ phrases }: PhraseViewerProps) {
 					WebkitOverflowScrolling: "touch",
 				}}
 			>
+				{/* Parallax background icons */}
+				<ParallaxIcons scrollY={scrollY} phraseCount={phrases.length} />
 				{phrases.map((phrase, index) => (
 					<div
 						key={index}
 						data-phrase
 						data-index={index}
-						className="flex min-h-screen w-full snap-start items-center justify-center px-6 sm:px-12"
+						className="relative z-10 flex min-h-screen w-full snap-start items-center justify-center px-6 sm:px-12"
 						style={{
 							scrollSnapStop: "always",
 							height: "100vh",
