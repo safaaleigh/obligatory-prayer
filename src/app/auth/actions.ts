@@ -4,6 +4,7 @@ import { signIn } from "@/server/auth";
 import { db } from "@/server/db";
 import { hash } from "bcryptjs";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 
 export async function signUpAction(formData: FormData) {
 	const name = formData.get("name") as string;
@@ -11,11 +12,11 @@ export async function signUpAction(formData: FormData) {
 	const password = formData.get("password") as string;
 
 	if (!name || !email || !password) {
-		return { error: "Missing required fields" };
+		redirect("/auth/signup?error=Missing required fields");
 	}
 
 	if (password.length < 8) {
-		return { error: "Password must be at least 8 characters" };
+		redirect("/auth/signup?error=Password must be at least 8 characters");
 	}
 
 	try {
@@ -25,7 +26,7 @@ export async function signUpAction(formData: FormData) {
 		});
 
 		if (existingUser) {
-			return { error: "User with this email already exists" };
+			redirect("/auth/signup?error=User with this email already exists");
 		}
 
 		// Hash password
@@ -40,10 +41,15 @@ export async function signUpAction(formData: FormData) {
 			},
 		});
 
-		return { success: true };
+		// Sign in after successful signup
+		await signIn("credentials", {
+			email,
+			password,
+			redirectTo: "/home",
+		});
 	} catch (error) {
 		console.error("Signup error:", error);
-		return { error: "An error occurred while creating your account" };
+		redirect("/auth/signup?error=An error occurred while creating your account");
 	}
 }
 
@@ -52,7 +58,7 @@ export async function signInAction(formData: FormData) {
 	const password = formData.get("password") as string;
 
 	if (!email || !password) {
-		return { error: "Missing email or password" };
+		redirect("/auth/signin?error=Missing email or password");
 	}
 
 	try {
@@ -64,7 +70,7 @@ export async function signInAction(formData: FormData) {
 	} catch (error) {
 		// NextAuth throws NEXT_REDIRECT error on success
 		if (error instanceof AuthError) {
-			return { error: "Invalid email or password" };
+			redirect("/auth/signin?error=Invalid email or password");
 		}
 		// Re-throw redirect errors
 		throw error;

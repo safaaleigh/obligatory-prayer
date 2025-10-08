@@ -110,7 +110,6 @@ export function PhraseViewer({ phrases }: PhraseViewerProps) {
 						className="relative z-10 flex min-h-screen w-full snap-start items-center justify-center px-6 sm:px-12"
 						style={{
 							scrollSnapStop: "always",
-							height: "100vh",
 							height: "100dvh",
 						}}
 					>

@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signInAction, signUpAction } from "../actions";
+import { signUpAction } from "../actions";
 
 export default async function SignUpPage({
 	searchParams,
@@ -22,14 +22,7 @@ export default async function SignUpPage({
 			redirect("/auth/signup?error=Passwords do not match");
 		}
 
-		const result = await signUpAction(formData);
-
-		if (result.error) {
-			redirect(`/auth/signup?error=${encodeURIComponent(result.error)}`);
-		}
-
-		// Sign in after successful signup
-		await signInAction(formData);
+		await signUpAction(formData);
 	}
 
 	return (
