@@ -14,10 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 import {
 	HomeIcon,
-	LogOutIcon,
+	Lamp,
 	Menu,
-	SettingsIcon,
-	UserIcon,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -78,7 +76,7 @@ export function Navbar({ className, user, ...props }: NavbarProps) {
 									<span className="sr-only">User menu</span>
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-56">
+							<DropdownMenuContent align="center" className="w-56 rounded-2xl">
 								<DropdownMenuLabel>
 									<div className="flex flex-col space-y-1">
 										<p className="font-medium text-sm leading-none">
@@ -90,24 +88,11 @@ export function Navbar({ className, user, ...props }: NavbarProps) {
 									</div>
 								</DropdownMenuLabel>
 								<DropdownMenuSeparator />
-								<DropdownMenuItem asChild>
-									<Link href="/profile" className="cursor-pointer">
-										<UserIcon className="mr-2 h-4 w-4" />
-										Profile
-									</Link>
-								</DropdownMenuItem>
-								<DropdownMenuItem asChild>
-									<Link href="/settings" className="cursor-pointer">
-										<SettingsIcon className="mr-2 h-4 w-4" />
-										Settings
-									</Link>
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
 								<DropdownMenuItem
 									className="cursor-pointer text-destructive focus:text-destructive"
 									onClick={() => signOut({ callbackUrl: "/" })}
 								>
-									<LogOutIcon className="mr-2 h-4 w-4" />
+									<Lamp className="mr-2 h-4 w-4" />
 									Sign Out
 								</DropdownMenuItem>
 							</DropdownMenuContent>
