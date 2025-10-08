@@ -3,9 +3,7 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { auth } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
 
 export const metadata: Metadata = {
@@ -22,8 +20,6 @@ const geist = Geist({
 export default async function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
-	const session = await auth();
-
 	return (
 		<html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
 			<body>
@@ -34,7 +30,6 @@ export default async function RootLayout({
 					disableTransitionOnChange
 				>
 					<TRPCReactProvider>
-						<Navbar user={session?.user} />
 						{children}
 					</TRPCReactProvider>
 				</ThemeProvider>
