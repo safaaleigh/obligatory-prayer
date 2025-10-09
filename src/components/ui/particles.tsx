@@ -80,8 +80,8 @@ export function Particles({
 			size: Math.random() * size + size / 2,
 			alpha: 0,
 			targetAlpha: Math.random() * 0.6 + 0.1,
-			dx: (Math.random() - 0.5) * 0.1 + vx * 0.1,
-			dy: (Math.random() - 0.5) * 0.1 + vy * 0.1,
+			dx: (Math.random() - 0.5) * 0.3 + vx * 0.3,
+			dy: (Math.random() - 0.5) * 0.3 + vy * 0.3,
 			magnetism: 0.1 + Math.random() * 4,
 		}));
 
