@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
 	History,
+	Home,
 	Lamp,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -88,9 +89,15 @@ export function Navbar({ className, user, ...props }: NavbarProps) {
 								</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild className="cursor-pointer">
+									<Link href="/home">
+										<Home className="mr-2 h-4 w-4" />
+										Home
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild className="cursor-pointer">
 									<Link href="/history">
 										<History className="mr-2 h-4 w-4" />
-										Prayer History
+										History
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
