@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import { FloatingNavbar } from "@/components/floating-navbar";
+import { Button } from "@/components/ui/button";
 import { auth } from "@/server/auth";
 
 export default async function Home() {
@@ -17,11 +19,19 @@ export default async function Home() {
 			<main className="flex min-h-screen flex-col items-center justify-center">
 				<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
 					<h1 className="font-extrabold text-5xl tracking-tight sm:text-[5rem]">
-						Cosmic <span className="text-primary">Tree</span>
+						Obligatory <span className="text-primary">Prayer</span>
 					</h1>
 					<p className="text-center text-muted-foreground text-xl">
-						Welcome to Cosmic Tree
+						Your daily companion for reciting Bahá'í obligatory prayers
 					</p>
+					<div className="flex gap-4">
+						<Button size="lg" asChild>
+							<Link href="/auth/signup">Get Started</Link>
+						</Button>
+						<Button size="lg" variant="outline" asChild>
+							<Link href="/auth/signin">Sign In</Link>
+						</Button>
+					</div>
 				</div>
 			</main>
 		</>

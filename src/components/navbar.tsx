@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
-	HomeIcon,
+	History,
 	Lamp,
-	Menu,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -45,7 +44,7 @@ export function Navbar({ className, user, ...props }: NavbarProps) {
 					href={user ? "/home" : "/"}
 					className="flex items-center space-x-2 text-primary transition-colors hover:text-primary/90"
 				>
-					<span className="font-bold text-xl">Cosmic Tree</span>
+					<span className="font-bold text-xl">Obligatory Prayer</span>
 				</Link>
 
 				{/* Right side */}
@@ -87,6 +86,13 @@ export function Navbar({ className, user, ...props }: NavbarProps) {
 										</p>
 									</div>
 								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem asChild className="cursor-pointer">
+									<Link href="/history">
+										<History className="mr-2 h-4 w-4" />
+										Prayer History
+									</Link>
+								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem
 									className="cursor-pointer text-destructive focus:text-destructive"

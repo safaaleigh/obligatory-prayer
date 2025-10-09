@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { DoorOpen, Lamp, Sparkles } from "lucide-react";
+import { DoorOpen, History, Lamp, Sparkles } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -79,6 +79,13 @@ export function FloatingNavbar({ className, user, ...props }: FloatingNavbarProp
 									</p>
 								</div>
 							</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem asChild className="cursor-pointer">
+								<Link href="/history">
+									<History className="mr-2 h-4 w-4" />
+									Prayer History
+								</Link>
+							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								className="cursor-pointer text-destructive focus:text-destructive"

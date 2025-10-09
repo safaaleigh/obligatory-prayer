@@ -51,15 +51,16 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    password      String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    id                String              @id @default(cuid())
+    name              String?
+    email             String?             @unique
+    emailVerified     DateTime?
+    image             String?
+    password          String?
+    accounts          Account[]
+    sessions          Session[]
+    posts             Post[]
+    prayerCompletions PrayerCompletion[]
 }
 
 model VerificationToken {
@@ -68,4 +69,15 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model PrayerCompletion {
+    id          String   @id @default(cuid())
+    userId      String
+    prayerType  String   // "short", "medium", or "long"
+    completedAt DateTime @default(now())
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, completedAt])
+    @@index([userId, prayerType])
 }
