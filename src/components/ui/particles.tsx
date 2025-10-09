@@ -44,8 +44,8 @@ export function Particles({
 	const context = useRef<CanvasRenderingContext2D | null>(null);
 	const circles = useRef<Particle[]>([]);
 	const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-	const mouseMoveRef = useRef<(e: MouseEvent) => void>();
-	const rafRef = useRef<number>();
+	const mouseMoveRef = useRef<((e: MouseEvent) => void) | undefined>(undefined);
+	const rafRef = useRef<number | undefined>(undefined);
 	const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
 
 	useEffect(() => {
