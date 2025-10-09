@@ -32,25 +32,25 @@ export default async function HomePage() {
 
 	return (
 		<main className="min-h-screen bg-background flex items-center justify-center">
-			<div className="container mx-auto px-4">
+			<div className="container mx-auto px-4 pt-24 pb-8">
 				<div className="mx-auto max-w-4xl">
-					<div className="mb-12 text-center">
-						<h1 className="mb-4 font-bold text-4xl tracking-tight sm:text-5xl">
+					<div className="mb-8 sm:mb-12 text-center">
+						<h1 className="mb-4 font-bold text-3xl tracking-tight sm:text-4xl md:text-5xl">
 							Select Your Prayer
 						</h1>
-						<p className="text-muted-foreground text-lg">
+						<p className="text-muted-foreground text-base sm:text-lg">
 							Select which obligatory prayer you would like to recite today
 						</p>
 					</div>
 
-					<div className="grid gap-6 md:grid-cols-3">
+					<div className="grid gap-3 sm:gap-4 md:grid-cols-3">
 						{prayerOptions.map((prayer) => (
 							<Link key={prayer.id} href={`/pray/${prayer.id}`}>
 								<Card
 									className={`bg-gradient-to-br ${prayer.color} rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer`}
 								>
-									<CardContent className="flex items-center justify-center p-6">
-										<h2 className="font-semibold text-xl capitalize">
+									<CardContent className="flex items-center justify-center py-6 px-8 sm:py-8 sm:px-10">
+										<h2 className="font-semibold text-lg sm:text-xl capitalize">
 											{prayer.id}
 										</h2>
 									</CardContent>
