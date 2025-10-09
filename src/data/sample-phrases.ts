@@ -11,7 +11,7 @@ export const samplePhrases = [
 	"From that single question bloomed a thousand possibilities.",
 	"Each possibility branching into another, and another still.",
 	"Like roots of a tree growing upward instead of down.",
-	"A cosmic tree.",
+	"An obligatory prayer.",
 	"Its branches reaching across dimensions.",
 	"Its leaves whispering secrets in languages not yet invented.",
 	"And at its base, where root meets trunk, sat the question that started it all.",
@@ -22,5 +22,5 @@ export const samplePhrases = [
 	"Because the question was never about the answer.",
 	"It was about the journey.",
 	"The infinite unfolding of what could be.",
-	"Welcome to the Cosmic Tree.",
+	"Welcome to Obligatory Prayer.",
 ];
