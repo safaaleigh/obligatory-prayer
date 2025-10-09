@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ParallaxIcons } from "./parallax-icons";
 import { FloatingNavbar } from "./floating-navbar";
+import { Particles } from "./ui/particles";
 import { api } from "@/trpc/react";
 import type { Prayer } from "@/data/prayers";
 import { useRouter } from "next/navigation";
@@ -25,7 +25,6 @@ export function PrayerRecitationViewer({
 }: PrayerRecitationViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
-	const [scrollY, setScrollY] = useState(0);
 	const [isCompleted, setIsCompleted] = useState(false);
 	const router = useRouter();
 
@@ -107,19 +106,6 @@ export function PrayerRecitationViewer({
 		return () => observer.disconnect();
 	}, [prayer.phrases]);
 
-	// Track scroll position for parallax effect
-	useEffect(() => {
-		const container = containerRef.current;
-		if (!container) return;
-
-		const handleScroll = () => {
-			setScrollY(container.scrollTop);
-		};
-
-		container.addEventListener("scroll", handleScroll);
-		return () => container.removeEventListener("scroll", handleScroll);
-	}, []);
-
 	return (
 		<>
 			{/* Floating Navbar */}
@@ -129,6 +115,15 @@ export function PrayerRecitationViewer({
 			<div className="pointer-events-none fixed bottom-6 right-6 z-10 rounded-full border bg-background/80 px-3 py-1 font-medium text-sm shadow-lg backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
 				{currentIndex + 1} / {prayer.phrases.length}
 			</div>
+
+			{/* Particles background - fixed position */}
+			<Particles
+				className="fixed inset-0"
+				quantity={100}
+				ease={80}
+				staticity={50}
+				size={0.8}
+			/>
 
 			{/* Scrollable container */}
 			<div
@@ -140,8 +135,6 @@ export function PrayerRecitationViewer({
 					WebkitOverflowScrolling: "touch",
 				}}
 			>
-				{/* Parallax background icons */}
-				<ParallaxIcons scrollY={scrollY} phraseCount={prayer.phrases.length} />
 				{prayer.phrases.map((phrase, index) => {
 					const isLastPhrase = index === prayer.phrases.length - 1;
 
