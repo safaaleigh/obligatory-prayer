@@ -25,10 +25,10 @@ export default async function Home() {
 						Your daily companion for reciting Bahá'í obligatory prayers
 					</p>
 					<div className="flex gap-4">
-						<Button size="lg" asChild>
+						<Button size="lg" className="rounded-full" asChild>
 							<Link href="/auth/signup">Get Started</Link>
 						</Button>
-						<Button size="lg" variant="outline" asChild>
+						<Button size="lg" variant="outline" className="rounded-full" asChild>
 							<Link href="/auth/signin">Sign In</Link>
 						</Button>
 					</div>
