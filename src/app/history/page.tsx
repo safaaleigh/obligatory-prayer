@@ -45,15 +45,6 @@ export default async function HistoryPage() {
 				<div className="container mx-auto px-4 py-16 pt-24">
 					<div className="mx-auto max-w-5xl">
 						<div className="mb-12">
-							<div className="mb-6 flex items-center justify-between">
-								<h1 className="font-bold text-4xl tracking-tight">
-									Prayer History
-								</h1>
-								<Button variant="outline" asChild>
-									<Link href="/home">Back to Home</Link>
-								</Button>
-							</div>
-
 							{/* Stats Cards */}
 							<div className="grid gap-4 md:grid-cols-3">
 								<Card>
@@ -92,57 +83,35 @@ export default async function HistoryPage() {
 									</CardHeader>
 									<CardContent>
 										{stats.total > 0 ? (
-											<>
-												<div className="mb-3 flex h-3 overflow-hidden rounded-full">
-													{stats.countByType.short > 0 && (
-														<div
-															className="bg-gradient-to-r from-blue-500 to-cyan-500"
-															style={{
-																width: `${(stats.countByType.short / stats.total) * 100}%`,
-															}}
-															title={`Short: ${stats.countByType.short}`}
-														/>
-													)}
-													{stats.countByType.medium > 0 && (
-														<div
-															className="bg-gradient-to-r from-purple-500 to-pink-500"
-															style={{
-																width: `${(stats.countByType.medium / stats.total) * 100}%`,
-															}}
-															title={`Medium: ${stats.countByType.medium}`}
-														/>
-													)}
-													{stats.countByType.long > 0 && (
-														<div
-															className="bg-gradient-to-r from-amber-500 to-orange-500"
-															style={{
-																width: `${(stats.countByType.long / stats.total) * 100}%`,
-															}}
-															title={`Long: ${stats.countByType.long}`}
-														/>
-													)}
-												</div>
-												<div className="flex justify-between gap-2 text-xs">
-													<div className="flex items-center gap-1">
-														<div className="h-2 w-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" />
-														<span className="text-muted-foreground">
-															{stats.countByType.short}
-														</span>
-													</div>
-													<div className="flex items-center gap-1">
-														<div className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-														<span className="text-muted-foreground">
-															{stats.countByType.medium}
-														</span>
-													</div>
-													<div className="flex items-center gap-1">
-														<div className="h-2 w-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500" />
-														<span className="text-muted-foreground">
-															{stats.countByType.long}
-														</span>
-													</div>
-												</div>
-											</>
+											<div className="flex h-3 overflow-hidden rounded-full">
+												{stats.countByType.short > 0 && (
+													<div
+														className="bg-gradient-to-r from-blue-500 to-cyan-500"
+														style={{
+															width: `${(stats.countByType.short / stats.total) * 100}%`,
+														}}
+														title={`Short: ${stats.countByType.short}`}
+													/>
+												)}
+												{stats.countByType.medium > 0 && (
+													<div
+														className="bg-gradient-to-r from-purple-500 to-pink-500"
+														style={{
+															width: `${(stats.countByType.medium / stats.total) * 100}%`,
+														}}
+														title={`Medium: ${stats.countByType.medium}`}
+													/>
+												)}
+												{stats.countByType.long > 0 && (
+													<div
+														className="bg-gradient-to-r from-amber-500 to-orange-500"
+														style={{
+															width: `${(stats.countByType.long / stats.total) * 100}%`,
+														}}
+														title={`Long: ${stats.countByType.long}`}
+													/>
+												)}
+											</div>
 										) : (
 											<p className="text-muted-foreground text-sm">No prayers yet</p>
 										)}
