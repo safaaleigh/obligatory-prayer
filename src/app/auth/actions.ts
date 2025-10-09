@@ -48,8 +48,12 @@ export async function signUpAction(formData: FormData) {
 			redirectTo: "/home",
 		});
 	} catch (error) {
-		console.error("Signup error:", error);
-		redirect("/auth/signup?error=An error occurred while creating your account");
+		// NextAuth throws NEXT_REDIRECT error on success
+		if (error instanceof AuthError) {
+			redirect("/auth/signup?error=An error occurred while creating your account");
+		}
+		// Re-throw redirect errors
+		throw error;
 	}
 }
 
