@@ -10,6 +10,9 @@ import {
 	calculateStreak,
 	checkAchievements,
 	validatePrayerType,
+	validateUserId,
+	validateSaveCompletionInput,
+	validateGetHistoryInput,
 } from "../src/lib/effect";
 import type { PrayerCompletion, PrayerType } from "../src/lib/effect";
 
@@ -244,5 +247,107 @@ describe("checkAchievements", () => {
 		);
 
 		expect(achievements).toHaveLength(0);
+	});
+
+	test("awards dedicated_50 achievement", async () => {
+		const achievements = await runEffect(
+			checkAchievements(49, 1, 50, 1, { short: 50, medium: 0, long: 0 }),
+		);
+
+		expect(achievements).toContain("dedicated_50");
+	});
+});
+
+// ============================================================================
+// validateUserId Tests
+// ============================================================================
+
+describe("validateUserId", () => {
+	test("accepts valid user ID", async () => {
+		expect(await runEffect(validateUserId("user-123"))).toBe("user-123");
+	});
+
+	test("rejects null user ID", async () => {
+		const result = await Effect.runPromiseExit(validateUserId(null));
+		expect(result._tag).toBe("Failure");
+	});
+
+	test("rejects undefined user ID", async () => {
+		const result = await Effect.runPromiseExit(validateUserId(undefined));
+		expect(result._tag).toBe("Failure");
+	});
+
+	test("rejects empty string user ID", async () => {
+		const result = await Effect.runPromiseExit(validateUserId(""));
+		expect(result._tag).toBe("Failure");
+	});
+});
+
+// ============================================================================
+// validateSaveCompletionInput Tests
+// ============================================================================
+
+describe("validateSaveCompletionInput", () => {
+	test("validates correct input", async () => {
+		const result = await runEffect(
+			validateSaveCompletionInput({ userId: "user-1", prayerType: "short" }),
+		);
+
+		expect(result.userId).toBe("user-1");
+		expect(result.prayerType).toBe("short");
+	});
+
+	test("rejects missing userId", async () => {
+		const result = await Effect.runPromiseExit(
+			validateSaveCompletionInput({ userId: null, prayerType: "short" }),
+		);
+		expect(result._tag).toBe("Failure");
+	});
+
+	test("rejects invalid prayer type", async () => {
+		const result = await Effect.runPromiseExit(
+			validateSaveCompletionInput({ userId: "user-1", prayerType: "invalid" }),
+		);
+		expect(result._tag).toBe("Failure");
+	});
+});
+
+// ============================================================================
+// validateGetHistoryInput Tests
+// ============================================================================
+
+describe("validateGetHistoryInput", () => {
+	test("validates input without prayer type filter", async () => {
+		const result = await runEffect(
+			validateGetHistoryInput({ userId: "user-1", limit: 10 }),
+		);
+
+		expect(result.userId).toBe("user-1");
+		expect(result.limit).toBe(10);
+		expect(result.prayerType).toBeUndefined();
+	});
+
+	test("validates input with prayer type filter", async () => {
+		const result = await runEffect(
+			validateGetHistoryInput({ userId: "user-1", limit: 10, prayerType: "medium" }),
+		);
+
+		expect(result.userId).toBe("user-1");
+		expect(result.limit).toBe(10);
+		expect(result.prayerType).toBe("medium");
+	});
+
+	test("rejects missing userId", async () => {
+		const result = await Effect.runPromiseExit(
+			validateGetHistoryInput({ userId: null }),
+		);
+		expect(result._tag).toBe("Failure");
+	});
+
+	test("rejects invalid prayer type filter", async () => {
+		const result = await Effect.runPromiseExit(
+			validateGetHistoryInput({ userId: "user-1", prayerType: "invalid" }),
+		);
+		expect(result._tag).toBe("Failure");
 	});
 });
