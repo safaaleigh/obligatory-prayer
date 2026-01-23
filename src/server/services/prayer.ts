@@ -1,4 +1,4 @@
-import { Effect, Context, Layer } from "effect";
+import { Effect, Context, Layer, Schedule } from "effect";
 import type { PrismaClient, PrayerCompletion } from "@prisma/client";
 
 // ============================================================================
@@ -41,6 +41,19 @@ export interface PrayerStats {
 	recentCompletions: PrayerCompletion[];
 }
 
+export interface DashboardData {
+	stats: PrayerStats;
+	history: PrayerCompletion[];
+}
+
+// ============================================================================
+// Retry Schedule - exponential backoff with 3 retries
+// ============================================================================
+
+const retrySchedule = Schedule.exponential("100 millis").pipe(
+	Schedule.compose(Schedule.recurs(3)),
+);
+
 // ============================================================================
 // Prayer Service Definition
 // ============================================================================
@@ -61,6 +74,11 @@ export class PrayerService extends Context.Tag("PrayerService")<
 		readonly getStats: (
 			userId: string,
 		) => Effect.Effect<PrayerStats, DatabaseError>;
+
+		readonly getDashboardData: (
+			userId: string,
+			historyLimit?: number,
+		) => Effect.Effect<DashboardData, DatabaseError>;
 	}
 >() {}
 
@@ -77,7 +95,7 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 					return yield* Effect.fail(new InvalidPrayerTypeError(prayerType));
 				}
 
-				// Save to database
+				// Save to database with retry for transient failures
 				const completion = yield* Effect.tryPromise({
 					try: () =>
 						db.prayerCompletion.create({
@@ -87,7 +105,7 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 							},
 						}),
 					catch: (error) => new DatabaseError(error),
-				});
+				}).pipe(Effect.retry(retrySchedule));
 
 				yield* Effect.log(`Prayer completion saved: ${prayerType} for user ${userId}`);
 
@@ -107,7 +125,7 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 							take: input?.limit ?? 50,
 						}),
 					catch: (error) => new DatabaseError(error),
-				});
+				}).pipe(Effect.retry(retrySchedule));
 
 				yield* Effect.log(`Fetched ${completions.length} prayer completions for user ${userId}`);
 
@@ -116,7 +134,7 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 
 		getStats: (userId) =>
 			Effect.gen(function* () {
-				// Fetch all completions
+				// Fetch all completions with retry
 				const completions = yield* Effect.tryPromise({
 					try: () =>
 						db.prayerCompletion.findMany({
@@ -124,7 +142,7 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 							orderBy: { completedAt: "desc" },
 						}),
 					catch: (error) => new DatabaseError(error),
-				});
+				}).pipe(Effect.retry(retrySchedule));
 
 				// Count by prayer type
 				const countByType = {
@@ -165,6 +183,80 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 					currentStreak,
 					recentCompletions: completions.slice(0, 10),
 				};
+			}),
+
+		getDashboardData: (userId, historyLimit = 20) =>
+			Effect.gen(function* () {
+				yield* Effect.log(`Fetching dashboard data for user ${userId}`);
+
+				// Fetch stats and history in parallel for better performance
+				const [stats, history] = yield* Effect.all(
+					[
+						// Get stats
+						Effect.tryPromise({
+							try: () =>
+								db.prayerCompletion.findMany({
+									where: { userId },
+									orderBy: { completedAt: "desc" },
+								}),
+							catch: (error) => new DatabaseError(error),
+						}).pipe(
+							Effect.retry(retrySchedule),
+							Effect.map((completions) => {
+								const countByType = {
+									short: completions.filter((c) => c.prayerType === "short").length,
+									medium: completions.filter((c) => c.prayerType === "medium").length,
+									long: completions.filter((c) => c.prayerType === "long").length,
+								};
+
+								const today = new Date();
+								today.setHours(0, 0, 0, 0);
+
+								const completionsByDate = new Map<string, boolean>();
+								for (const completion of completions) {
+									const dateKey = completion.completedAt.toISOString().split("T")[0];
+									if (dateKey) {
+										completionsByDate.set(dateKey, true);
+									}
+								}
+
+								let currentStreak = 0;
+								const checkDate = new Date(today);
+								while (true) {
+									const dateKey = checkDate.toISOString().split("T")[0];
+									if (dateKey && completionsByDate.has(dateKey)) {
+										currentStreak++;
+										checkDate.setDate(checkDate.getDate() - 1);
+									} else {
+										break;
+									}
+								}
+
+								return {
+									total: completions.length,
+									countByType,
+									currentStreak,
+									recentCompletions: completions.slice(0, 10),
+								};
+							}),
+						),
+						// Get history
+						Effect.tryPromise({
+							try: () =>
+								db.prayerCompletion.findMany({
+									where: { userId },
+									orderBy: { completedAt: "desc" },
+									take: historyLimit,
+								}),
+							catch: (error) => new DatabaseError(error),
+						}).pipe(Effect.retry(retrySchedule)),
+					],
+					{ concurrency: "unbounded" },
+				);
+
+				yield* Effect.log(`Dashboard data loaded: ${stats.total} total prayers, ${history.length} history items`);
+
+				return { stats, history };
 			}),
 	});
 

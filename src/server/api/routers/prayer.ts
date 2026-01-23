@@ -61,4 +61,27 @@ export const prayerRouter = createTRPCRouter({
 			});
 		});
 	}),
+
+	// Parallel data fetching for dashboard - fetches stats and history concurrently
+	getDashboardData: protectedProcedure
+		.input(
+			z
+				.object({
+					historyLimit: z.number().min(1).max(100).optional(),
+				})
+				.optional(),
+		)
+		.query(async ({ ctx, input }) => {
+			return runPrayerEffect(ctx.db, (service) =>
+				service.getDashboardData(
+					ctx.session.user.id,
+					input?.historyLimit ?? 20,
+				),
+			).catch(() => {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch dashboard data",
+				});
+			});
+		}),
 });

@@ -2,7 +2,11 @@
 
 import { signIn } from "@/server/auth";
 import { db } from "@/server/db";
-import { hash } from "bcryptjs";
+import {
+	runAuthEffect,
+	EmailAlreadyExistsError,
+	ValidationError,
+} from "@/server/services/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -11,35 +15,11 @@ export async function signUpAction(formData: FormData) {
 	const email = formData.get("email") as string;
 	const password = formData.get("password") as string;
 
-	if (!name || !email || !password) {
-		redirect("/auth/signup?error=Missing required fields");
-	}
-
-	if (password.length < 8) {
-		redirect("/auth/signup?error=Password must be at least 8 characters");
-	}
-
 	try {
-		// Check if user already exists
-		const existingUser = await db.user.findUnique({
-			where: { email },
-		});
-
-		if (existingUser) {
-			redirect("/auth/signup?error=User with this email already exists");
-		}
-
-		// Hash password
-		const hashedPassword = await hash(password, 10);
-
-		// Create user
-		await db.user.create({
-			data: {
-				name,
-				email,
-				password: hashedPassword,
-			},
-		});
+		// Use Effect-based auth service for signup
+		await runAuthEffect(db, (service) =>
+			service.signUp({ name, email, password }),
+		);
 
 		// Sign in after successful signup
 		await signIn("credentials", {
@@ -48,6 +28,13 @@ export async function signUpAction(formData: FormData) {
 			redirectTo: "/home",
 		});
 	} catch (error) {
+		// Handle Effect errors
+		if (error instanceof ValidationError) {
+			redirect(`/auth/signup?error=${encodeURIComponent(error.message)}`);
+		}
+		if (error instanceof EmailAlreadyExistsError) {
+			redirect("/auth/signup?error=User with this email already exists");
+		}
 		// NextAuth throws NEXT_REDIRECT error on success
 		if (error instanceof AuthError) {
 			redirect("/auth/signup?error=An error occurred while creating your account");
