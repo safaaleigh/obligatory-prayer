@@ -34,6 +34,13 @@ export interface GetHistoryInput {
 	prayerType?: PrayerType;
 }
 
+export interface PrayerStats {
+	total: number;
+	countByType: Record<PrayerType, number>;
+	currentStreak: number;
+	recentCompletions: PrayerCompletion[];
+}
+
 // ============================================================================
 // Prayer Service Definition
 // ============================================================================
@@ -50,6 +57,10 @@ export class PrayerService extends Context.Tag("PrayerService")<
 			userId: string,
 			input?: GetHistoryInput,
 		) => Effect.Effect<PrayerCompletion[], DatabaseError>;
+
+		readonly getStats: (
+			userId: string,
+		) => Effect.Effect<PrayerStats, DatabaseError>;
 	}
 >() {}
 
@@ -101,6 +112,59 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 				yield* Effect.log(`Fetched ${completions.length} prayer completions for user ${userId}`);
 
 				return completions;
+			}),
+
+		getStats: (userId) =>
+			Effect.gen(function* () {
+				// Fetch all completions
+				const completions = yield* Effect.tryPromise({
+					try: () =>
+						db.prayerCompletion.findMany({
+							where: { userId },
+							orderBy: { completedAt: "desc" },
+						}),
+					catch: (error) => new DatabaseError(error),
+				});
+
+				// Count by prayer type
+				const countByType = {
+					short: completions.filter((c) => c.prayerType === "short").length,
+					medium: completions.filter((c) => c.prayerType === "medium").length,
+					long: completions.filter((c) => c.prayerType === "long").length,
+				};
+
+				// Calculate current streak
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+
+				const completionsByDate = new Map<string, boolean>();
+				for (const completion of completions) {
+					const dateKey = completion.completedAt.toISOString().split("T")[0];
+					if (dateKey) {
+						completionsByDate.set(dateKey, true);
+					}
+				}
+
+				let currentStreak = 0;
+				const checkDate = new Date(today);
+				while (true) {
+					const dateKey = checkDate.toISOString().split("T")[0];
+					if (dateKey && completionsByDate.has(dateKey)) {
+						currentStreak++;
+						checkDate.setDate(checkDate.getDate() - 1);
+					} else {
+						break;
+					}
+				}
+
+				yield* Effect.log(`Calculated stats for user ${userId}: ${completions.length} total, ${currentStreak} day streak`);
+
+				return {
+					total: completions.length,
+					countByType,
+					currentStreak,
+					recentCompletions: completions.slice(0, 10),
+				};
 			}),
 	});
 

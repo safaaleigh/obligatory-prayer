@@ -52,52 +52,13 @@ export const prayerRouter = createTRPCRouter({
 		}),
 
 	getStats: protectedProcedure.query(async ({ ctx }) => {
-		const userId = ctx.session.user.id;
-
-		// Get all completions for the user
-		const completions = await ctx.db.prayerCompletion.findMany({
-			where: { userId },
-			orderBy: { completedAt: "desc" },
+		return runPrayerEffect(ctx.db, (service) =>
+			service.getStats(ctx.session.user.id),
+		).catch(() => {
+			throw new TRPCError({
+				code: "INTERNAL_SERVER_ERROR",
+				message: "Failed to fetch prayer stats",
+			});
 		});
-
-		// Count by prayer type
-		const countByType = {
-			short: completions.filter((c) => c.prayerType === "short").length,
-			medium: completions.filter((c) => c.prayerType === "medium").length,
-			long: completions.filter((c) => c.prayerType === "long").length,
-		};
-
-		// Calculate current streak
-		let currentStreak = 0;
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-
-		// Group completions by date
-		const completionsByDate = new Map<string, boolean>();
-		for (const completion of completions) {
-			const dateKey = completion.completedAt.toISOString().split("T")[0];
-			if (dateKey) {
-				completionsByDate.set(dateKey, true);
-			}
-		}
-
-		// Calculate streak
-		let checkDate = new Date(today);
-		while (true) {
-			const dateKey = checkDate.toISOString().split("T")[0];
-			if (dateKey && completionsByDate.has(dateKey)) {
-				currentStreak++;
-				checkDate.setDate(checkDate.getDate() - 1);
-			} else {
-				break;
-			}
-		}
-
-		return {
-			total: completions.length,
-			countByType,
-			currentStreak,
-			recentCompletions: completions.slice(0, 10),
-		};
 	}),
 });
