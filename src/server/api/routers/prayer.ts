@@ -41,16 +41,14 @@ export const prayerRouter = createTRPCRouter({
 				.optional(),
 		)
 		.query(async ({ ctx, input }) => {
-			const completions = await ctx.db.prayerCompletion.findMany({
-				where: {
-					userId: ctx.session.user.id,
-					...(input?.prayerType && { prayerType: input.prayerType }),
-				},
-				orderBy: { completedAt: "desc" },
-				take: input?.limit ?? 50,
+			return runPrayerEffect(ctx.db, (service) =>
+				service.getHistory(ctx.session.user.id, input ?? undefined),
+			).catch(() => {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch prayer history",
+				});
 			});
-
-			return completions;
 		}),
 
 	getStats: protectedProcedure.query(async ({ ctx }) => {

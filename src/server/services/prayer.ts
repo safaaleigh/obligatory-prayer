@@ -26,6 +26,15 @@ const isValidPrayerType = (type: string): type is PrayerType =>
 	VALID_PRAYER_TYPES.includes(type as PrayerType);
 
 // ============================================================================
+// Input Types
+// ============================================================================
+
+export interface GetHistoryInput {
+	limit?: number;
+	prayerType?: PrayerType;
+}
+
+// ============================================================================
 // Prayer Service Definition
 // ============================================================================
 
@@ -36,6 +45,11 @@ export class PrayerService extends Context.Tag("PrayerService")<
 			userId: string,
 			prayerType: string,
 		) => Effect.Effect<PrayerCompletion, DatabaseError | InvalidPrayerTypeError>;
+
+		readonly getHistory: (
+			userId: string,
+			input?: GetHistoryInput,
+		) => Effect.Effect<PrayerCompletion[], DatabaseError>;
 	}
 >() {}
 
@@ -67,6 +81,26 @@ export const makePrayerServiceLive = (db: PrismaClient) =>
 				yield* Effect.log(`Prayer completion saved: ${prayerType} for user ${userId}`);
 
 				return completion;
+			}),
+
+		getHistory: (userId, input) =>
+			Effect.gen(function* () {
+				const completions = yield* Effect.tryPromise({
+					try: () =>
+						db.prayerCompletion.findMany({
+							where: {
+								userId,
+								...(input?.prayerType && { prayerType: input.prayerType }),
+							},
+							orderBy: { completedAt: "desc" },
+							take: input?.limit ?? 50,
+						}),
+					catch: (error) => new DatabaseError(error),
+				});
+
+				yield* Effect.log(`Fetched ${completions.length} prayer completions for user ${userId}`);
+
+				return completions;
 			}),
 	});
 
