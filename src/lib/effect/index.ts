@@ -50,6 +50,5 @@ export {
 export {
 	type IPrayerService,
 	makePrayerService,
-	makePrayerServiceLive,
 	PrayerService,
 } from "./prayer-service";

@@ -13,7 +13,7 @@ import {
 	retrySchedule,
 	validatePrayerType,
 } from "./prayer-logic";
-import { PrayerRepo, type PrayerRepository } from "./prayer-repository";
+import { PrayerRepo } from "./prayer-repository";
 import type { DashboardData, PrayerCompletion, PrayerStats, PrayerType } from "./types";
 
 // ============================================================================
@@ -165,10 +165,3 @@ export const makePrayerService = Layer.effect(
 		};
 	}),
 );
-
-// ============================================================================
-// Helper to create a fully-wired service layer
-// ============================================================================
-
-export const makePrayerServiceLive = (repoLayer: Layer.Layer<PrayerRepository>) =>
-	Layer.provide(makePrayerService, Layer.succeed(PrayerRepo, repoLayer as unknown as PrayerRepository));
