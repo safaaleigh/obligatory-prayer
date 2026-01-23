@@ -3,6 +3,8 @@ import {
 	createTRPCRouter,
 	protectedProcedure,
 } from "@/server/api/trpc";
+import { runPrayerEffect, InvalidPrayerTypeError } from "@/server/services/prayer";
+import { TRPCError } from "@trpc/server";
 
 export const prayerRouter = createTRPCRouter({
 	saveCompletion: protectedProcedure
@@ -12,11 +14,20 @@ export const prayerRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			return ctx.db.prayerCompletion.create({
-				data: {
-					prayerType: input.prayerType,
-					userId: ctx.session.user.id,
-				},
+			return runPrayerEffect(ctx.db, (service) =>
+				service.saveCompletion(ctx.session.user.id, input.prayerType),
+			).catch((error: unknown) => {
+				// Transform Effect errors to tRPC errors
+				if (error instanceof InvalidPrayerTypeError) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: `Invalid prayer type: ${error.prayerType}`,
+					});
+				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to save prayer completion",
+				});
 			});
 		}),
 
