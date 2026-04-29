@@ -1,0 +1,159 @@
+# Builds the iOS app and uploads it to TestFlight.
+#
+# Triggered by:
+#   - Pushing a tag matching v* (e.g. v0.1.0) — uses the tag as the marketing version.
+#   - Manual dispatch from the Actions tab — uses 0.1.0-dev as the marketing version.
+#
+# One-time setup the developer must do before this works:
+#   1. In App Store Connect, create the app record with bundle id
+#      `com.obligatoryprayer.app` and a matching SKU.
+#   2. In Users and Access → Integrations → App Store Connect API, create a key
+#      with at least Developer access. Download the .p8 once (it cannot be
+#      re-downloaded). Note the Key ID and Issuer ID.
+#   3. In the Apple Developer portal, generate an iOS Distribution certificate;
+#      install it locally and export it as a .p12 with a password.
+#   4. Create an App Store provisioning profile bound to the bundle id +
+#      Distribution cert; download the .mobileprovision.
+#   5. Add the following secrets to the GitHub repository:
+#        APPLE_TEAM_ID                 — 10-char team id
+#        APPSTORE_KEY_ID               — 10-char API key id
+#        APPSTORE_ISSUER_ID            — issuer UUID
+#        APPSTORE_PRIVATE_KEY          — base64 of the AuthKey_<KEY_ID>.p8
+#        BUILD_CERTIFICATE_BASE64      — base64 of the distribution .p12
+#        P12_PASSWORD                  — the .p12 passphrase
+#        PROVISIONING_PROFILE_BASE64   — base64 of the .mobileprovision
+#        KEYCHAIN_PASSWORD             — any string, used for the ephemeral keychain
+#
+#   To base64-encode a file on macOS:  base64 -i path/to/file | pbcopy
+
+name: TestFlight
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  testflight:
+    name: Build and upload to TestFlight
+    runs-on: macos-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ios
+
+    env:
+      SCHEME: ObligatoryPrayer
+      ARCHIVE_PATH: build/ObligatoryPrayer.xcarchive
+      EXPORT_PATH: build/export
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+        working-directory: .
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+        working-directory: .
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Install signing assets
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -euo pipefail
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          cp "$PROFILE_PATH" "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          echo "Installed provisioning profile $PROFILE_UUID"
+
+          API_KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$API_KEY_DIR"
+          echo -n "$APPSTORE_PRIVATE_KEY" | base64 --decode > "$API_KEY_DIR/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+      - name: Set version and build number
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME}" == v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="0.1.0-dev"
+          fi
+          BUILD="${{ github.run_number }}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ObligatoryPrayer/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" ObligatoryPrayer/Resources/Info.plist
+          echo "Version $VERSION ($BUILD)"
+
+      - name: Run unit tests
+        run: |
+          xcodebuild \
+            -project ObligatoryPrayer.xcodeproj \
+            -scheme "$SCHEME" \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            test
+
+      - name: Archive
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcodebuild \
+            -project ObligatoryPrayer.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            archive
+
+      - name: Export IPA
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload to TestFlight
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          IPA=$(ls "$EXPORT_PATH"/*.ipa | head -1)
+          echo "Uploading $IPA"
+          xcrun altool --upload-app \
+            -f "$IPA" \
+            --type ios \
+            --apiKey "$APPSTORE_KEY_ID" \
+            --apiIssuer "$APPSTORE_ISSUER_ID"

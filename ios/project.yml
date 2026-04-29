@@ -1,0 +1,73 @@
+name: ObligatoryPrayer
+options:
+  bundleIdPrefix: com.obligatoryprayer
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+  groupSortPosition: top
+  generateEmptyDirectories: true
+  defaultConfig: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    SUPPORTS_MACCATALYST: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: "$(APPLE_TEAM_ID)"
+
+configs:
+  Debug: debug
+  Release: release
+
+targets:
+  ObligatoryPrayer:
+    type: application
+    platform: iOS
+    sources:
+      - path: ObligatoryPrayer
+    resources:
+      - path: ObligatoryPrayer/Resources/Assets.xcassets
+    info:
+      path: ObligatoryPrayer/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Obligatory Prayer
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIRequiredDeviceCapabilities:
+          - arm64
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.obligatoryprayer.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+    scheme:
+      testTargets:
+        - ObligatoryPrayerTests
+      gatherCoverageData: true
+
+  ObligatoryPrayerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ObligatoryPrayerTests
+    dependencies:
+      - target: ObligatoryPrayer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.obligatoryprayer.app.tests
+        GENERATE_INFOPLIST_FILE: YES
